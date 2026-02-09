@@ -1,5 +1,8 @@
 # Reusable Rocket Inventory Optimization
 
+> [!NOTE]
+> This is for exploratory learning and understanding and knowledge development with mockup data from Kaggle and NASA.
+
 **Type**: Reinforcement agent for stock levels
 
 **Description**: Build a reinforcement learning or ML model (like scikit-optimize) to manage multi-echelon inventory for rocket parts—accounting for reusable turnaround times, high launch cadences, and lower costs.
