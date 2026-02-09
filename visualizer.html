@@ -5,14 +5,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inventory Alchemist | RL Optimization</title>
-    <!-- Scripts for React, Babel, Tailwind, and Lucide -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <!-- Proven Script Configuration (Iframe Safe) -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
     <style>
+        body,
+        html,
+        #root {
+            height: 100%;
+            margin: 0;
+            background: #020617;
+            /* slate-950 */
+            color: #fff;
+        }
+
+        #fallback-check {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: monospace;
+            font-size: 10px;
+            color: #475569;
+            pointer-events: none;
+        }
+
         @keyframes rebirth-stream {
             0% {
                 transform: translate(0, 0) scale(1.8);
@@ -34,9 +55,10 @@
 </head>
 
 <body class="bg-slate-950">
+    <div id="fallback-check">INITIALIZING INVENTORY ALCHEMIST...</div>
     <div id="root"></div>
 
-    <script type="text/babel">
+    <script type="text/babel" data-presets="react">
         const { useState, useEffect, useRef, useMemo } = React;
         const { Play, Pause, RefreshCw, Zap, TrendingDown, DollarSign, Clock, Layers } = LucideReact;
 
@@ -58,6 +80,12 @@
             const [cashFlows, setCashFlows] = useState([]);
             const requestRef = useRef();
             const lastUpdateRef = useRef(Date.now());
+
+            // Clear fallback on mount
+            useEffect(() => {
+                const fallback = document.getElementById('fallback-check');
+                if (fallback) fallback.style.display = 'none';
+            }, []);
 
             // Generate nodes based on hierarchy with initial countdowns
             const initialNodes = useMemo(() => {
@@ -151,18 +179,18 @@
             }, [isPlaying, launchCadence]);
 
             return (
-                <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-6 font-sans overflow-hidden flex flex-col">
+                <div className="h-full min-h-screen bg-slate-950 text-slate-100 p-4 md:p-6 font-sans overflow-hidden flex flex-col">
                     {/* Compact Header */}
-                    <div className="max-w-6xl mx-auto w-full flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 bg-slate-900/60 p-4 rounded-2xl border border-slate-800 backdrop-blur-md">
+                    <div className="mx-auto w-full flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 bg-slate-900/60 p-4 rounded-2xl border border-slate-800 backdrop-blur-md shrink-0">
                         <div className="flex items-center gap-4">
                             <div className="bg-blue-500/20 p-2.5 rounded-xl border border-blue-500/30">
                                 <Layers className="text-blue-400" size={24} />
                             </div>
                             <div>
-                                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 via-silver-200 to-purple-400 bg-clip-text text-transparent">
+                                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 via-silver-200 to-purple-400 bg-clip-text text-transparent uppercase tracking-tight">
                                     Inventory Alchemist
                                 </h1>
-                                <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono tracking-tight">
+                                <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono tracking-tight uppercase">
                                     <Clock size={10} className="text-blue-500" />
                                     RUN TIME: {Math.floor(simTime)}s
                                 </div>
@@ -172,23 +200,23 @@
                         <div className="flex items-center gap-8">
                             <div className="text-right">
                                 <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-0.5">Budget Pool</div>
-                                <div className="text-2xl font-mono text-emerald-400 font-black flex items-center justify-end">
+                                <div className="text-2xl font-mono text-emerald-400 font-black flex items-center justify-end uppercase">
                                     <DollarSign size={18} className="opacity-70" />
                                     {budget.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                 </div>
                             </div>
                             <div className="text-right border-l border-slate-800 pl-8">
                                 <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-0.5">Global Stock</div>
-                                <div className="text-2xl font-mono text-blue-400 font-black">
+                                <div className="text-2xl font-mono text-blue-400 font-black uppercase">
                                     {totalInventory.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow">
+                    <main className="mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow min-h-0 overflow-hidden">
                         {/* Compact Sidebar */}
-                        <div className="lg:col-span-3 space-y-4">
+                        <div className="lg:col-span-3 space-y-4 overflow-y-auto pr-1">
                             <div className="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 shadow-xl">
                                 <label className="text-[11px] font-bold mb-4 flex items-center gap-2 text-slate-300 uppercase tracking-widest">
                                     <Zap size={14} className="text-yellow-400" />
@@ -238,7 +266,7 @@
                                 <div className="space-y-3">
                                     <div className="flex justify-between text-[10px]">
                                         <span className="text-slate-400 font-bold uppercase tracking-tighter">Optimization Rate</span>
-                                        <span className="text-blue-400 font-mono font-bold">{launchCadence}%</span>
+                                        <span className="text-blue-400 font-mono font-bold uppercase">{launchCadence}%</span>
                                     </div>
                                     <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden border border-slate-800">
                                         <div
@@ -251,7 +279,7 @@
                         </div>
 
                         {/* Improved Impact Canvas */}
-                        <div className="lg:col-span-9 bg-slate-900/40 rounded-3xl border border-slate-800 relative h-[480px] overflow-hidden shadow-2xl">
+                        <div className="lg:col-span-9 bg-slate-900/40 rounded-3xl border border-slate-800 relative overflow-hidden shadow-2xl flex-grow min-h-0">
                             {/* Subtle Connections */}
                             <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20">
                                 {nodeStates.map((node, i) => {
@@ -304,7 +332,7 @@
                                                 border: '4px solid rgba(255,255,255,0.4)'
                                             }}
                                         >
-                                            <span className="text-xl md:text-2xl font-black text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] pointer-events-none select-none">
+                                            <span className="text-xl md:text-2xl font-black text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] pointer-events-none select-none uppercase">
                                                 {Math.round(node.inventory)}
                                             </span>
 
@@ -329,7 +357,7 @@
                                         </div>
 
                                         {/* Countdown Timer */}
-                                        <div className="mt-3 text-[10px] font-mono font-black text-slate-200 bg-black/40 px-2 py-0.5 rounded-full border border-white/10 backdrop-blur-sm shadow-sm">
+                                        <div className="mt-3 text-[10px] font-mono font-black text-slate-200 bg-black/40 px-2 py-0.5 rounded-full border border-white/10 backdrop-blur-sm shadow-sm uppercase">
                                             T-{Math.ceil(node.countdown)}s
                                         </div>
                                     </div>
@@ -349,7 +377,7 @@
                                 >
                                     <div className="relative flex flex-col items-center">
                                         <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-slate-100 to-slate-400 blur-[0.5px] shadow-[0_0_12px_#fff]" />
-                                        <div className="absolute -top-6 text-[11px] font-mono text-emerald-400 font-black whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,1)]">
+                                        <div className="absolute -top-6 text-[11px] font-mono text-emerald-400 font-black whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,1)] uppercase">
                                             +${Math.round(cash.value)}
                                         </div>
                                     </div>
@@ -357,7 +385,7 @@
                             ))}
 
                             {/* Legend Overlay */}
-                            <div className="absolute bottom-4 right-4 flex gap-4 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 backdrop-blur-md shadow-2xl">
+                            <div className="absolute bottom-4 right-4 flex gap-4 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 backdrop-blur-md shadow-2xl shrink-0">
                                 <div className="flex items-center gap-2">
                                     <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_#3b82f6]"></div>
                                     <span className="text-[9px] text-slate-300 font-black uppercase tracking-widest">Factory</span>
@@ -372,7 +400,16 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </main>
+
+                    {/* Footer */}
+                    <footer className="mt-6 flex justify-between items-center text-slate-600 text-[8px] font-mono tracking-widest uppercase shrink-0">
+                        <span>© 2026 Orbital Dynamics</span>
+                        <div className="flex gap-4">
+                            <span>Status: Nominal</span>
+                            <span>RL Optimized</span>
+                        </div>
+                    </footer>
 
                     <style>{`
                 input[type=range]::-webkit-slider-thumb {
