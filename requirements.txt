@@ -1,0 +1,6 @@
+# Reusable-Inventory-RL Requirements
+# gymnasium
+# stable-baselines3
+# pandas
+# numpy
+# matplotlib

@@ -1,0 +1,22 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# Data
+data/*
+!data/.gitkeep
+
+# Notebooks
+.ipynb_checkpoints
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reusable Rocket Inventory Optimization</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&family=Inter:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #141414;
+            --text: #e0e0e0;
+            --accent: #5efc82;
+            --accent-glow: rgba(94, 252, 130, 0.2);
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border: rgba(94, 252, 130, 0.2);
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            padding: 3rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            position: relative;
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.8rem;
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.5px;
+        }
+
+        .type {
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            margin-bottom: 2.5rem;
+            display: block;
+        }
+
+        .description {
+            font-size: 1.15rem;
+            line-height: 1.7;
+            color: #999;
+            margin-bottom: 2.5rem;
+        }
+
+        .first-principles {
+            padding: 1.5rem;
+            background: rgba(94, 252, 130, 0.05);
+            border-left: 2px solid var(--accent);
+        }
+
+        .first-principles h2 {
+            font-size: 0.9rem;
+            margin-top: 0;
+            color: #ddd;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .first-principles p {
+            font-style: italic;
+            margin-bottom: 0;
+            color: #fff;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Reusable Rocket Inventory Optimization</h1>
+        <span class="type">Reinforcement Agent for Stock Levels</span>
+
+        <p class="description">
+            Build a reinforcement learning model to manage multi-echelon inventory for rocket parts—accounting for
+            reusable turnaround times, high launch cadences, and lower costs.
+        </p>
+
+        <div class="first-principles">
+            <h2>First Principles</h2>
+            <p>"Holding cash dies, reusability rebirths it. Queueing law—flow times lag equals pile-up. Optimize from
+                there."</p>
+        </div>
+    </div>
+</body>
+
+</html>
