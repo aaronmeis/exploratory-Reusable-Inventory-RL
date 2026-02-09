@@ -8,6 +8,10 @@
 
 **Approach**: Incorporate scenarios where Starship reusability reduces holding costs by twenty-two percent (like Raytheon examples). Add sensitivity analysis on launch frequency impacts.
 
+## Interactive Visualizer
+🚀 **[Launch Inventory Alchemist](visualizer.html)**
+Explore Reinforcement Learning optimization for multi-echelon inventory in real-time.
+
 ## Overview
 This repository explores optimizing inventory for reusable aerospace systems using RL, focusing on Little's Law and cost-per-flight reduction.
 

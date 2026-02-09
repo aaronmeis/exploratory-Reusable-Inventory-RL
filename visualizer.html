@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Alchemist | RL Optimization</title>
+    <!-- Scripts for React, Babel, Tailwind, and Lucide -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/lucide-react@latest/dist/umd/lucide-react.js"></script>
+    <style>
+        @keyframes rebirth-stream {
+            0% {
+                transform: translate(0, 0) scale(1.8);
+                opacity: 1;
+            }
+
+            60% {
+                opacity: 0.9;
+            }
+
+            100% {
+                transform: translate(-40px, -480px) scale(0.1);
+                left: 50%;
+                top: 0%;
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-950">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useMemo } = React;
+        const { Play, Pause, RefreshCw, Zap, TrendingDown, DollarSign, Clock, Layers } = LucideReact;
+
+        // Configuration for the Supply Chain Hierarchy
+        const HIERARCHY = {
+            tiers: [
+                { id: 'factory', name: 'Global Factory', count: 1, color: '#3b82f6' },
+                { id: 'regional', name: 'Regional Hubs', count: 3, color: '#8b5cf6' },
+                { id: 'local', name: 'Local Centers', count: 6, color: '#ec4899' }
+            ]
+        };
+
+        const App = () => {
+            const [launchCadence, setLaunchCadence] = useState(50); // 0 to 100
+            const [isPlaying, setIsPlaying] = useState(true);
+            const [budget, setBudget] = useState(10000);
+            const [totalInventory, setTotalInventory] = useState(0);
+            const [simTime, setSimTime] = useState(0);
+            const [cashFlows, setCashFlows] = useState([]);
+            const requestRef = useRef();
+            const lastUpdateRef = useRef(Date.now());
+
+            // Generate nodes based on hierarchy with initial countdowns
+            const initialNodes = useMemo(() => {
+                const allNodes = [];
+                HIERARCHY.tiers.forEach((tier, tIdx) => {
+                    for (let i = 0; i < tier.count; i++) {
+                        allNodes.push({
+                            id: `${tier.id}-${i}`,
+                            tierId: tier.id,
+                            tierIdx: tIdx,
+                            name: `${tier.name} ${i + 1}`,
+                            x: (i + 1) * (100 / (tier.count + 1)),
+                            y: (tIdx + 1) * 25,
+                            baseSize: 50 - tIdx * 8, // Larger bases for impact
+                            inventory: 50 + Math.random() * 50,
+                            countdown: 5 + Math.random() * 10 // Lead time countdown
+                        });
+                    }
+                });
+                return allNodes;
+            }, []);
+
+            const [nodeStates, setNodeStates] = useState(initialNodes);
+
+            const updateSimulation = () => {
+                if (!isPlaying) return;
+
+                const now = Date.now();
+                const dt = (now - lastUpdateRef.current) / 1000;
+                lastUpdateRef.current = now;
+
+                setSimTime(prev => prev + dt);
+
+                setNodeStates(prev => {
+                    let totalInv = 0;
+                    let newCashEvents = [];
+
+                    const updated = prev.map(node => {
+                        // Countdown logic: simulating lead time cycles
+                        let currentCountdown = node.countdown - dt;
+                        let inventoryAdjustment = 0;
+
+                        if (currentCountdown <= 0) {
+                            // Shipment arrival / Consumption cycle
+                            currentCountdown = 8 + Math.random() * 7;
+                            inventoryAdjustment = (Math.random() - 0.5) * 15;
+                        }
+
+                        // Higher cadence = lower target inventory (RL efficiency)
+                        const targetInventory = 100 - (launchCadence * 0.9);
+                        const diff = (node.inventory + inventoryAdjustment) - targetInventory;
+
+                        // Faster adaptation at higher launch cadence
+                        const changeRate = 0.8 + (launchCadence / 40);
+                        const newInv = (node.inventory + inventoryAdjustment) - (diff * changeRate * dt);
+
+                        totalInv += newInv;
+
+                        // Cash generation when inventory shrinks toward target
+                        if (diff > 2 && Math.random() > 0.92) {
+                            newCashEvents.push({
+                                id: Math.random(),
+                                startX: node.x,
+                                startY: node.y,
+                                value: diff * 0.2
+                            });
+                        }
+
+                        return {
+                            ...node,
+                            inventory: Math.max(0, newInv),
+                            countdown: currentCountdown
+                        };
+                    });
+
+                    if (newCashEvents.length > 0) {
+                        setCashFlows(curr => [...curr, ...newCashEvents].slice(-30));
+                        setBudget(b => b + newCashEvents.reduce((acc, ev) => acc + ev.value, 0));
+                    }
+
+                    setTotalInventory(totalInv);
+                    return updated;
+                });
+
+                requestRef.current = requestAnimationFrame(updateSimulation);
+            };
+
+            useEffect(() => {
+                requestRef.current = requestAnimationFrame(updateSimulation);
+                return () => cancelAnimationFrame(requestRef.current);
+            }, [isPlaying, launchCadence]);
+
+            return (
+                <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-6 font-sans overflow-hidden flex flex-col">
+                    {/* Compact Header */}
+                    <div className="max-w-6xl mx-auto w-full flex flex-col sm:flex-row justify-between items-center mb-6 gap-4 bg-slate-900/60 p-4 rounded-2xl border border-slate-800 backdrop-blur-md">
+                        <div className="flex items-center gap-4">
+                            <div className="bg-blue-500/20 p-2.5 rounded-xl border border-blue-500/30">
+                                <Layers className="text-blue-400" size={24} />
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 via-silver-200 to-purple-400 bg-clip-text text-transparent">
+                                    Inventory Alchemist
+                                </h1>
+                                <div className="flex items-center gap-2 text-[10px] text-slate-500 font-mono tracking-tight">
+                                    <Clock size={10} className="text-blue-500" />
+                                    RUN TIME: {Math.floor(simTime)}s
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="flex items-center gap-8">
+                            <div className="text-right">
+                                <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-0.5">Budget Pool</div>
+                                <div className="text-2xl font-mono text-emerald-400 font-black flex items-center justify-end">
+                                    <DollarSign size={18} className="opacity-70" />
+                                    {budget.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                </div>
+                            </div>
+                            <div className="text-right border-l border-slate-800 pl-8">
+                                <div className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mb-0.5">Global Stock</div>
+                                <div className="text-2xl font-mono text-blue-400 font-black">
+                                    {totalInventory.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="max-w-6xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-6 flex-grow">
+                        {/* Compact Sidebar */}
+                        <div className="lg:col-span-3 space-y-4">
+                            <div className="bg-slate-900/80 p-5 rounded-2xl border border-slate-800 shadow-xl">
+                                <label className="text-[11px] font-bold mb-4 flex items-center gap-2 text-slate-300 uppercase tracking-widest">
+                                    <Zap size={14} className="text-yellow-400" />
+                                    Launch Cadence
+                                </label>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    value={launchCadence}
+                                    onChange={(e) => setLaunchCadence(parseInt(e.target.value))}
+                                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500 mb-3"
+                                />
+                                <div className="flex justify-between text-[10px] text-slate-500 font-black uppercase tracking-tighter">
+                                    <span className="text-slate-600">Manual / Bulky</span>
+                                    <span className="text-blue-400">RL Optimized</span>
+                                </div>
+
+                                <div className="mt-8 grid grid-cols-2 gap-3">
+                                    <button
+                                        onClick={() => setIsPlaying(!isPlaying)}
+                                        className={`py-2.5 px-3 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all active:scale-95 ${isPlaying ? 'bg-slate-800 text-slate-400 border border-slate-700' : 'bg-blue-600 text-white shadow-lg shadow-blue-900/20'
+                                            }`}
+                                    >
+                                        {isPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" />}
+                                        {isPlaying ? 'STOP' : 'START'}
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            setBudget(10000);
+                                            setSimTime(0);
+                                            setNodeStates(initialNodes);
+                                        }}
+                                        className="py-2.5 px-3 rounded-xl text-xs font-black border border-slate-700 text-slate-400 hover:bg-slate-800 transition-all active:scale-95 flex items-center justify-center gap-2"
+                                    >
+                                        <RefreshCw size={14} />
+                                        RESET
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="bg-gradient-to-br from-blue-900/20 to-purple-900/20 p-5 rounded-2xl border border-blue-500/20">
+                                <h3 className="text-[11px] font-bold mb-3 flex items-center gap-2 text-blue-300 uppercase tracking-widest">
+                                    <TrendingDown size={14} />
+                                    Cap-Ex Efficiency
+                                </h3>
+                                <div className="space-y-3">
+                                    <div className="flex justify-between text-[10px]">
+                                        <span className="text-slate-400 font-bold uppercase tracking-tighter">Optimization Rate</span>
+                                        <span className="text-blue-400 font-mono font-bold">{launchCadence}%</span>
+                                    </div>
+                                    <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden border border-slate-800">
+                                        <div
+                                            className="bg-gradient-to-r from-blue-600 to-purple-500 h-full transition-all duration-700"
+                                            style={{ width: `${launchCadence}%` }}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Improved Impact Canvas */}
+                        <div className="lg:col-span-9 bg-slate-900/40 rounded-3xl border border-slate-800 relative h-[480px] overflow-hidden shadow-2xl">
+                            {/* Subtle Connections */}
+                            <svg className="absolute inset-0 w-full h-full pointer-events-none opacity-20">
+                                {nodeStates.map((node, i) => {
+                                    if (node.tierIdx === 0) return null;
+                                    const parentTier = HIERARCHY.tiers[node.tierIdx - 1];
+                                    const parentNodes = nodeStates.filter(n => n.tierId === parentTier.id);
+                                    const parent = parentNodes[i % parentNodes.length];
+
+                                    return (
+                                        <line
+                                            key={`link-${node.id}`}
+                                            x1={`${parent.x}%`} y1={`${parent.y}%`}
+                                            x2={`${node.x}%`} y2={`${node.y}%`}
+                                            stroke="rgba(148, 163, 184, 0.4)" strokeWidth="1"
+                                            strokeDasharray="4 4"
+                                        />
+                                    );
+                                })}
+                            </svg>
+
+                            {/* Visualization Nodes */}
+                            {nodeStates.map((node) => {
+                                const tierColor = HIERARCHY.tiers[node.tierIdx].color;
+                                const pulseScale = 1 + (Math.sin(simTime * 5) * (node.inventory / 350));
+                                const nodeSize = (node.baseSize * (node.inventory / 50 + 0.6)) * pulseScale;
+
+                                return (
+                                    <div
+                                        key={node.id}
+                                        className="absolute transition-all duration-700 ease-out flex flex-col items-center justify-center group"
+                                        style={{
+                                            left: `${node.x}%`,
+                                            top: `${node.y}%`,
+                                            transform: 'translate(-50%, -50%)'
+                                        }}
+                                    >
+                                        {/* Node Label (Hover Only) */}
+                                        <div className="absolute -top-10 text-[9px] font-black text-slate-500 uppercase tracking-tighter whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity bg-slate-950 px-2 py-1 rounded border border-slate-800">
+                                            {node.name}
+                                        </div>
+
+                                        {/* Main Visual Node */}
+                                        <div
+                                            className="rounded-full shadow-2xl relative flex flex-col items-center justify-center transition-all duration-1000"
+                                            style={{
+                                                width: `${nodeSize}px`,
+                                                height: `${nodeSize}px`,
+                                                backgroundColor: tierColor,
+                                                boxShadow: `0 0 ${nodeSize * 0.8}px ${tierColor}44`,
+                                                border: '4px solid rgba(255,255,255,0.4)'
+                                            }}
+                                        >
+                                            <span className="text-xl md:text-2xl font-black text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] pointer-events-none select-none">
+                                                {Math.round(node.inventory)}
+                                            </span>
+
+                                            {/* Shipment Progress Ring */}
+                                            <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none">
+                                                <circle
+                                                    cx="50%" cy="50%" r="45%"
+                                                    fill="transparent"
+                                                    stroke="rgba(255,255,255,0.2)"
+                                                    strokeWidth="2"
+                                                />
+                                                <circle
+                                                    cx="50%" cy="50%" r="45%"
+                                                    fill="transparent"
+                                                    stroke="rgba(255,255,255,0.8)"
+                                                    strokeWidth="3"
+                                                    strokeDasharray="283"
+                                                    strokeDashoffset={283 - (283 * (node.countdown / 15))}
+                                                    style={{ transition: 'stroke-dashoffset 1s linear' }}
+                                                />
+                                            </svg>
+                                        </div>
+
+                                        {/* Countdown Timer */}
+                                        <div className="mt-3 text-[10px] font-mono font-black text-slate-200 bg-black/40 px-2 py-0.5 rounded-full border border-white/10 backdrop-blur-sm shadow-sm">
+                                            T-{Math.ceil(node.countdown)}s
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                            {/* Silver Cash Streams */}
+                            {cashFlows.map(cash => (
+                                <div
+                                    key={cash.id}
+                                    className="absolute pointer-events-none z-[100]"
+                                    style={{
+                                        left: `${cash.startX}%`,
+                                        top: `${cash.startY}%`,
+                                        animation: 'rebirth-stream 1.8s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+                                    }}
+                                >
+                                    <div className="relative flex flex-col items-center">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-r from-slate-100 to-slate-400 blur-[0.5px] shadow-[0_0_12px_#fff]" />
+                                        <div className="absolute -top-6 text-[11px] font-mono text-emerald-400 font-black whitespace-nowrap drop-shadow-[0_1px_2px_rgba(0,0,0,1)]">
+                                            +${Math.round(cash.value)}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {/* Legend Overlay */}
+                            <div className="absolute bottom-4 right-4 flex gap-4 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 backdrop-blur-md shadow-2xl">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-[0_0_8px_#3b82f6]"></div>
+                                    <span className="text-[9px] text-slate-300 font-black uppercase tracking-widest">Factory</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_8px_#8b5cf6]"></div>
+                                    <span className="text-[9px] text-slate-300 font-black uppercase tracking-widest">Regional</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-pink-500 shadow-[0_0_8px_#ec4899]"></div>
+                                    <span className="text-[9px] text-slate-300 font-black uppercase tracking-widest">Local</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <style>{`
+                input[type=range]::-webkit-slider-thumb {
+                  height: 20px;
+                  width: 20px;
+                  border-radius: 50%;
+                  background: #3b82f6;
+                  cursor: pointer;
+                  -webkit-appearance: none;
+                  margin-top: -6px;
+                  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+                  border: 3px solid white;
+                  transition: transform 0.2s ease;
+                }
+                
+                input[type=range]:active::-webkit-slider-thumb {
+                  transform: scale(1.2);
+                }
+
+                input[type=range]::-webkit-slider-runnable-track {
+                  width: 100%;
+                  height: 8px;
+                  cursor: pointer;
+                  background: #0f172a;
+                  border-radius: 10px;
+                  border: 1px solid #1e293b;
+                }
+              `}</style>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>
